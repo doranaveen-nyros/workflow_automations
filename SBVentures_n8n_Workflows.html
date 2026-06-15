@@ -155,7 +155,7 @@
     <p>Modern .NET upgrade · SQL Server · Real Estate CRM · Branches: Hyderabad · Kakinada · Rajahmundry</p>
   </div>
   <div class="header-badge">
-    <div class="big">8</div>
+    <div class="big">6</div>
     <div class="lbl">Workflows</div>
   </div>
 </div>
@@ -285,44 +285,6 @@
     </div>
   </div>
 
-  <div class="card c7" onclick="open_(7)">
-    <div class="card-header">
-      <span class="num">07</span>
-      <span class="card-title">Manager Approval Bottleneck & Escalation Engine</span>
-    </div>
-    <div class="card-trigger">⏰ Trigger: Every 30 min polling + real-time webhook</div>
-    <ul class="card-steps">
-      <li>Pending > 4 h: SMS reminder to BM</li>
-      <li>Pending > 8 h: escalate to GM with AI context</li>
-      <li>Pending > 24 h: escalate to MD with full deal summary</li>
-      <li>Auto-approve routine discounts below threshold</li>
-      <li>Daily aging report: all pending items with wait times</li>
-    </ul>
-    <div class="tags">
-      <span class="tag sms">SMS Alert</span><span class="tag email">Email</span>
-      <span class="tag ai">AI Context</span><span class="tag cron">Polling</span>
-    </div>
-  </div>
-
-  <div class="card c8" onclick="open_(8)">
-    <div class="card-header">
-      <span class="num">08</span>
-      <span class="card-title">Monthly Commission Calculation & Payroll Engine</span>
-    </div>
-    <div class="card-trigger">⏰ Trigger: Last working day of month</div>
-    <ul class="card-steps">
-      <li>Pull confirmed sales per agent for the month</li>
-      <li>Apply commission slabs + bonuses for targets exceeded</li>
-      <li>Generate individual commission statement PDFs</li>
-      <li>Route for BM approval → HR → payroll system</li>
-      <li>Notify each employee; flag discrepancies to MD</li>
-    </ul>
-    <div class="tags">
-      <span class="tag pdf">PDF Slips</span><span class="tag email">Email</span>
-      <span class="tag db">SQL Calc</span><span class="tag cron">Month-end</span>
-    </div>
-  </div>
-
 </div>
 
 <!-- Pain point table -->
@@ -337,8 +299,6 @@
     <tr><td>04</td><td>Site visits not converting — post-visit follow-up inconsistent</td><td>SiteVisits, SaleEntry, FollowUpEntry</td><td>Executive, GrpM</td></tr>
     <tr><td>05</td><td>Post-sale legal and registration steps untracked and missed</td><td>SaleEntry, ManagerMenu, BankTransactions</td><td>Legal, Agent, BM</td></tr>
     <tr><td>06</td><td>Tele callers waste time; BM has no daily productivity view</td><td>TeleCallerPooling, TeleCallerMenu, Employee</td><td>Tele Caller, BM</td></tr>
-    <tr><td>07</td><td>Manager approvals stuck — agents losing deals while waiting</td><td>ManagerMenu, SaleEntry, Employee</td><td>BM, GM, MD</td></tr>
-    <tr><td>08</td><td>Commission disputes and manual HR calculations every month</td><td>SaleEntry, Employee, Branch</td><td>All sales staff, HR</td></tr>
   </tbody>
 </table>
 
@@ -460,40 +420,6 @@ const data = {
     ],
     roles:'Each Tele Caller receives personalised morning call list · BM receives morning assignment confirmation + evening productivity summary',
     pain:'Pain solved: Tele callers were independently deciding who to call from a shared pool — duplicated calls, cherry-picking easy leads, and no accountability for daily output.'
-  },
-  7:{
-    color:'#2c7a7b', label:'07',
-    title:'Manager Approval Bottleneck & Escalation Engine',
-    trigger:'⏰ Trigger: Every 30 minutes — query ManagerMenu for pending approvals',
-    steps:[
-      'SQL query: SELECT all ManagerMenu records WHERE Status = Pending; calculate WaitingHours = NOW() - RequestedAt for each',
-      'For each pending item: pull context — agent name, customer, deal value, discount amount, discount %, branch',
-      '4–8 hours pending: send SMS to BM — "Approval needed: [Agent] has requested ₹[X] discount for [Customer] (Plot [Y]). 4 hours pending."',
-      '8–24 hours pending: Claude AI generates context summary — deal background, agent history, customer profile — escalate to GM via email + SMS',
-      'Over 24 hours pending: escalate to MD with full dossier — customer details, deal value, what\'s at risk if lost, agent performance record',
-      'Auto-approve rule engine: if discount ≤ 1% AND agent tenure > 24 months AND customer is repeat buyer → auto-approve and log with audit note',
-      'Every morning at 7 AM: email aging report to each BM — table of all pending items, hours waiting, deal values at risk, recommended action',
-      'On approval or rejection: instant SMS to agent; if customer was promised decision by a time, send update message automatically'
-    ],
-    roles:'Executive/Agent submits request · BM alerted at 4 h · GM escalated at 8 h · MD escalated at 24 h · All receive outcome confirmation',
-    pain:'Pain solved: Average approval wait was 18 hours — agents reported losing 2–3 deals per month to competitors while waiting for discount decisions.'
-  },
-  8:{
-    color:'#702459', label:'08',
-    title:'Monthly Commission Calculation & Payroll Engine',
-    trigger:'⏰ Trigger: Last working day of month at 6:00 PM',
-    steps:[
-      'SQL query: all SaleEntry records for the month WHERE Status = Confirmed, grouped by EmployeeId — sum SaleValue per agent',
-      'Apply commission slab rules (read from Google Sheets config): 0–2 sales = 0.5%, 3–5 sales = 0.75%, 6+ sales = 1.2% of total sale value',
-      'Add performance bonuses: target exceeded by > 20% → ₹5,000 bonus; highest sales value in branch → ₹10,000 bonus; 100% follow-up completion → ₹2,000',
-      'For each agent: build commission statement with deal-by-deal breakdown — plot, customer, sale value, commission rate, line total, bonus items, grand total',
-      'Generate individual commission statement PDF per employee using template; include comparison vs last month and year-to-date total',
-      'Email each BM their branch\'s commission summary with approve/reject link (n8n webhook URL) — BM clicks Approve or flags discrepancy',
-      'On BM approval: forward consolidated branch file to HR email; append one row per agent to Google Sheets payroll tracker with all figures',
-      'Send payslip PDF to each employee\'s email + SMS: "Your commission of ₹[X] for [Month] has been approved and submitted to HR for processing."'
-    ],
-    roles:'All sales Executives receive individual PDF statement + SMS · BM reviews and approves branch totals · HR receives approved consolidated file · MD sees discrepancy flag report',
-    pain:'Pain solved: HR was spending 2–3 days each month manually calculating commissions from Excel exports, with frequent disputes over which sales counted.'
   }
 };
 
