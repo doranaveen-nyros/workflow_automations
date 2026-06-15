@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Ventures — n8n Automation Workflows</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f4f8; padding: 24px; color: #1a202c; }
+
+  .page-header {
+    background: linear-gradient(135deg, #1E4976 0%, #2d5a40 100%);
+    border-radius: 16px; padding: 32px 36px; margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .page-header h1 { color: #fff; font-size: 26px; font-weight: 700; }
+  .page-header p  { color: #BDD7F0; font-size: 14px; margin-top: 4px; }
+  .header-badge {
+    background: rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 10px 18px; text-align: center;
+  }
+  .header-badge .big { color: #FFD700; font-size: 28px; font-weight: 800; }
+  .header-badge .lbl { color: #BDD7F0; font-size: 11px; }
+
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4a5568; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+
+  .card {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 14px; padding: 20px; cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 5px; border-radius: 14px 0 0 14px;
+  }
+  .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.12); transform: translateY(-2px); }
+
+  .c1::before{background:#e53e3e}.c1:hover{border-color:#e53e3e}
+  .c2::before{background:#d69e2e}.c2:hover{border-color:#d69e2e}
+  .c3::before{background:#2f855a}.c3:hover{border-color:#2f855a}
+  .c4::before{background:#2b6cb0}.c4:hover{border-color:#2b6cb0}
+  .c5::before{background:#6b46c1}.c5:hover{border-color:#6b46c1}
+  .c6::before{background:#c05621}.c6:hover{border-color:#c05621}
+  .c7::before{background:#2c7a7b}.c7:hover{border-color:#2c7a7b}
+  .c8::before{background:#702459}.c8:hover{border-color:#702459}
+
+  .card-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .num {
+    font-size:11px; font-weight:800; color:#fff;
+    border-radius:7px; padding:3px 9px; flex-shrink:0; margin-top:2px;
+  }
+  .c1 .num{background:#e53e3e}.c2 .num{background:#d69e2e}
+  .c3 .num{background:#2f855a}.c4 .num{background:#2b6cb0}
+  .c5 .num{background:#6b46c1}.c6 .num{background:#c05621}
+  .c7 .num{background:#2c7a7b}.c8 .num{background:#702459}
+
+  .card-title { font-size:15px; font-weight:700; color:#1a202c; line-height:1.3; }
+  .card-trigger {
+    font-size:11.5px; color:#718096; background:#edf2f7;
+    border-radius:7px; padding:4px 10px; margin-bottom:10px;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .card-steps { list-style:none; }
+  .card-steps li {
+    font-size:12.5px; color:#4a5568; padding:3px 0 3px 16px;
+    position:relative; line-height:1.5; border-bottom:1px solid #f7fafc;
+  }
+  .card-steps li:last-child { border-bottom: none; }
+  .card-steps li::before { content:'→'; position:absolute; left:0; font-size:11px; color:#a0aec0; }
+
+  .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:12px; }
+  .tag {
+    font-size:10.5px; font-weight:600; border-radius:5px; padding:2px 8px;
+    background:#edf2f7; color:#4a5568;
+  }
+  .tag.ai{background:#e9d8fd;color:#553c9a}
+  .tag.sms{background:#c6f6d5;color:#276749}
+  .tag.email{background:#bee3f8;color:#2a69ac}
+  .tag.pdf{background:#fed7d7;color:#9b2c2c}
+  .tag.cron{background:#fefcbf;color:#744210}
+  .tag.db{background:#e2e8f0;color:#2d3748}
+  .tag.wa{background:#c6f6d5;color:#1a4731}
+
+  /* Detail modal */
+  .modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.55); z-index:1000;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:#fff; border-radius:18px; padding:32px;
+    max-width:680px; width:100%; max-height:90vh; overflow-y:auto;
+    position:relative;
+  }
+  .modal-close {
+    position:absolute; top:16px; right:18px;
+    background:none; border:none; font-size:22px; cursor:pointer; color:#a0aec0;
+  }
+  .modal-close:hover{color:#1a202c}
+  .modal-num { font-size:11px; font-weight:700; color:#fff; border-radius:6px; padding:3px 10px; display:inline-block; margin-bottom:10px; }
+  .modal-title { font-size:20px; font-weight:800; color:#1a202c; margin-bottom:8px; }
+  .modal-trigger { font-size:12px; color:#718096; background:#edf2f7; border-radius:6px; padding:4px 10px; display:inline-block; margin-bottom:18px; }
+  .steps-list { list-style:none; }
+  .steps-list li {
+    display:flex; gap:14px; padding:10px 0;
+    border-bottom:1px solid #f0f4f8; align-items:flex-start;
+  }
+  .steps-list li:last-child{border-bottom:none}
+  .step-num {
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#fff; flex-shrink:0;
+  }
+  .step-desc { font-size:13.5px; color:#4a5568; line-height:1.5; padding-top:3px; }
+  .modal-roles {
+    margin-top:18px; background:#f7fafc; border-radius:10px;
+    padding:14px 16px; font-size:13px; color:#4a5568; line-height:1.6;
+  }
+  .modal-roles strong{color:#1a202c}
+  .modal-pain {
+    margin-top:12px; background:#fffbeb; border-left:4px solid #d69e2e;
+    border-radius:0 8px 8px 0; padding:12px 16px; font-size:13px; color:#744210; line-height:1.5;
+  }
+
+  .pain-table {
+    width:100%; border-collapse:collapse; margin-top:28px; background:#fff;
+    border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.07);
+  }
+  .pain-table th {
+    background:#1E4976; color:#fff; text-align:left;
+    padding:12px 16px; font-size:13px;
+  }
+  .pain-table td { padding:11px 16px; font-size:13px; color:#4a5568; border-bottom:1px solid #edf2f7; }
+  .pain-table tr:last-child td{border-bottom:none}
+  .pain-table tr:nth-child(even) td{background:#f7fafc}
+  .pain-table td:first-child{font-weight:700;color:#1a202c;white-space:nowrap}
+
+  .footer-note {
+    text-align:center; margin-top:28px;
+    font-size:12px; color:#a0aec0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>SB Ventures CRM — n8n Automation Workflows</h1>
+    <p>Modern .NET upgrade · SQL Server · Real Estate CRM · Branches: Hyderabad · Kakinada · Rajahmundry</p>
+  </div>
+  <div class="header-badge">
+    <div class="big">8</div>
+    <div class="lbl">Workflows</div>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="leg-item"><span class="leg-dot" style="background:#553c9a"></span>AI / Claude</span>
+  <span class="leg-item"><span class="leg-dot" style="background:#276749"></span>SMS / WhatsApp</span>
+  <span class="leg-item"><span class="leg-dot" style="background:#2a69ac"></span>Email</span>
+  <span class="leg-item"><span class="leg-dot" style="background:#9b2c2c"></span>PDF Generation</span>
+  <span class="leg-item"><span class="leg-dot" style="background:#744210"></span>Scheduled / Cron</span>
+  <span class="leg-item"><span class="leg-dot" style="background:#2d3748"></span>SQL Server DB</span>
+</div>
+
+<div class="grid" id="grid">
+
+  <div class="card c1" onclick="open_(1)">
+    <div class="card-header">
+      <span class="num">01</span>
+      <span class="card-title">AI Lead Scoring & Smart Assignment Engine</span>
+    </div>
+    <div class="card-trigger">⚡ Trigger: New Enquiry saved in DB</div>
+    <ul class="card-steps">
+      <li>AI scores lead: Hot / Warm / Cold</li>
+      <li>Assigns to best-fit agent (load + skill match)</li>
+      <li>Personalised WhatsApp/SMS to customer</li>
+      <li>Creates prioritised follow-up task in CRM</li>
+      <li>Escalates to BM if unassigned after 2 h</li>
+    </ul>
+    <div class="tags">
+      <span class="tag ai">AI Scoring</span><span class="tag sms">SMS</span>
+      <span class="tag wa">WhatsApp</span><span class="tag db">SQL Server</span>
+    </div>
+  </div>
+
+  <div class="card c2" onclick="open_(2)">
+    <div class="card-header">
+      <span class="num">02</span>
+      <span class="card-title">Payment Due Date & Collection Orchestration</span>
+    </div>
+    <div class="card-trigger">⏰ Trigger: Daily cron — AdvanceReceipt due dates</div>
+    <ul class="card-steps">
+      <li>Day 7: Friendly reminder SMS + email to customer</li>
+      <li>Day 3: WhatsApp + agent alert</li>
+      <li>Day 0: Urgent BM alert + auto receipt draft ready</li>
+      <li>Overdue: PDF legal notice + manager approval route</li>
+      <li>On payment: receipt generated, CRM updated</li>
+    </ul>
+    <div class="tags">
+      <span class="tag cron">Scheduled</span><span class="tag sms">SMS</span>
+      <span class="tag pdf">PDF</span><span class="tag email">Email</span>
+    </div>
+  </div>
+
+  <div class="card c3" onclick="open_(3)">
+    <div class="card-header">
+      <span class="num">03</span>
+      <span class="card-title">Multi-Branch Executive Performance Intelligence</span>
+    </div>
+    <div class="card-trigger">⏰ Trigger: Every Monday 8 AM</div>
+    <ul class="card-steps">
+      <li>Pull week's data: enquiries, visits, sales, follow-ups</li>
+      <li>AI narrative analysis per agent + branch</li>
+      <li>Branch vs branch comparison with trend lines</li>
+      <li>Role-filtered reports: MD sees all, BM sees own</li>
+      <li>PDF + Google Sheets dashboard auto-updated</li>
+    </ul>
+    <div class="tags">
+      <span class="tag ai">AI Narrative</span><span class="tag pdf">PDF</span>
+      <span class="tag email">Email</span><span class="tag cron">Weekly</span>
+    </div>
+  </div>
+
+  <div class="card c4" onclick="open_(4)">
+    <div class="card-header">
+      <span class="num">04</span>
+      <span class="card-title">Site Visit → Sale Conversion Pipeline</span>
+    </div>
+    <div class="card-trigger">⚡ Trigger: SiteVisit marked Complete in DB</div>
+    <ul class="card-steps">
+      <li>2 h later: AI-personalised property summary to customer</li>
+      <li>Day 1: Follow-up call reminder to agent</li>
+      <li>Day 3: AI-generated offer letter if no action</li>
+      <li>Day 7: Group Manager intervention alert</li>
+      <li>Day 14: Win-back sequence triggered</li>
+    </ul>
+    <div class="tags">
+      <span class="tag ai">AI Personalise</span><span class="tag wa">WhatsApp</span>
+      <span class="tag pdf">PDF</span><span class="tag db">CRM Update</span>
+    </div>
+  </div>
+
+  <div class="card c5" onclick="open_(5)">
+    <div class="card-header">
+      <span class="num">05</span>
+      <span class="card-title">Sale Confirmation → Legal & Registration Orchestrator</span>
+    </div>
+    <div class="card-trigger">⚡ Trigger: Sale entry approved by manager</div>
+    <ul class="card-steps">
+      <li>Generate & send welcome letter PDF to customer</li>
+      <li>Alert legal team with document checklist PDF</li>
+      <li>30 / 15 / 7 / 1-day registration reminders to all parties</li>
+      <li>Bank loan → trigger bank procedure sub-workflow</li>
+      <li>Schedule 30 / 60 / 90-day post-sale follow-ups</li>
+    </ul>
+    <div class="tags">
+      <span class="tag pdf">PDF Docs</span><span class="tag email">Email</span>
+      <span class="tag sms">SMS</span><span class="tag cron">Reminders</span>
+    </div>
+  </div>
+
+  <div class="card c6" onclick="open_(6)">
+    <div class="card-header">
+      <span class="num">06</span>
+      <span class="card-title">Tele Caller Smart Lead Pool & Daily Brief</span>
+    </div>
+    <div class="card-trigger">⏰ Trigger: Daily 8:45 AM</div>
+    <ul class="card-steps">
+      <li>AI prioritises stale / uncontacted leads by score</li>
+      <li>Assigns by language preference, success rate, workload</li>
+      <li>Sends each caller their call list via WhatsApp</li>
+      <li>Evening: tracks completion, callbacks, not-interested</li>
+      <li>BM WhatsApp summary: productivity score per caller</li>
+    </ul>
+    <div class="tags">
+      <span class="tag ai">AI Priority</span><span class="tag wa">WhatsApp</span>
+      <span class="tag db">SQL Pull</span><span class="tag cron">Daily</span>
+    </div>
+  </div>
+
+  <div class="card c7" onclick="open_(7)">
+    <div class="card-header">
+      <span class="num">07</span>
+      <span class="card-title">Manager Approval Bottleneck & Escalation Engine</span>
+    </div>
+    <div class="card-trigger">⏰ Trigger: Every 30 min polling + real-time webhook</div>
+    <ul class="card-steps">
+      <li>Pending > 4 h: SMS reminder to BM</li>
+      <li>Pending > 8 h: escalate to GM with AI context</li>
+      <li>Pending > 24 h: escalate to MD with full deal summary</li>
+      <li>Auto-approve routine discounts below threshold</li>
+      <li>Daily aging report: all pending items with wait times</li>
+    </ul>
+    <div class="tags">
+      <span class="tag sms">SMS Alert</span><span class="tag email">Email</span>
+      <span class="tag ai">AI Context</span><span class="tag cron">Polling</span>
+    </div>
+  </div>
+
+  <div class="card c8" onclick="open_(8)">
+    <div class="card-header">
+      <span class="num">08</span>
+      <span class="card-title">Monthly Commission Calculation & Payroll Engine</span>
+    </div>
+    <div class="card-trigger">⏰ Trigger: Last working day of month</div>
+    <ul class="card-steps">
+      <li>Pull confirmed sales per agent for the month</li>
+      <li>Apply commission slabs + bonuses for targets exceeded</li>
+      <li>Generate individual commission statement PDFs</li>
+      <li>Route for BM approval → HR → payroll system</li>
+      <li>Notify each employee; flag discrepancies to MD</li>
+    </ul>
+    <div class="tags">
+      <span class="tag pdf">PDF Slips</span><span class="tag email">Email</span>
+      <span class="tag db">SQL Calc</span><span class="tag cron">Month-end</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pain point table -->
+<table class="pain-table">
+  <thead>
+    <tr><th>#</th><th>Core Business Pain Point Solved</th><th>DB Tables Used</th><th>Roles Impacted</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>01</td><td>Leads falling through cracks due to slow manual assignment</td><td>Enquiry, TeleCallerMenu, Employee, Branch</td><td>Tele Caller, BM</td></tr>
+    <tr><td>02</td><td>Payment collections missed because reminders are manual</td><td>AdvanceReceipt, SaleEntry, BillSummary</td><td>Executive, BM, GM</td></tr>
+    <tr><td>03</td><td>MD has no weekly cross-branch performance visibility</td><td>Enquiry, SiteVisits, SaleEntry, FollowUpEntry</td><td>MD, GM, BM</td></tr>
+    <tr><td>04</td><td>Site visits not converting — post-visit follow-up inconsistent</td><td>SiteVisits, SaleEntry, FollowUpEntry</td><td>Executive, GrpM</td></tr>
+    <tr><td>05</td><td>Post-sale legal and registration steps untracked and missed</td><td>SaleEntry, ManagerMenu, BankTransactions</td><td>Legal, Agent, BM</td></tr>
+    <tr><td>06</td><td>Tele callers waste time; BM has no daily productivity view</td><td>TeleCallerPooling, TeleCallerMenu, Employee</td><td>Tele Caller, BM</td></tr>
+    <tr><td>07</td><td>Manager approvals stuck — agents losing deals while waiting</td><td>ManagerMenu, SaleEntry, Employee</td><td>BM, GM, MD</td></tr>
+    <tr><td>08</td><td>Commission disputes and manual HR calculations every month</td><td>SaleEntry, Employee, Branch</td><td>All sales staff, HR</td></tr>
+  </tbody>
+</table>
+
+<p class="footer-note">SB Ventures Prototype — n8n Automation Workflow Proposals · June 2026 · Nyros Technologies</p>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModal_()">&times;</button>
+    <span class="modal-num" id="m-num"></span>
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-trigger" id="m-trigger"></div>
+    <ul class="steps-list" id="m-steps"></ul>
+    <div class="modal-roles" id="m-roles"></div>
+    <div class="modal-pain" id="m-pain"></div>
+  </div>
+</div>
+
+<script>
+const data = {
+  1:{
+    color:'#e53e3e', label:'01',
+    title:'AI Lead Scoring & Smart Assignment Engine',
+    trigger:'⚡ Trigger: New Enquiry record saved to SBVenturesLive DB',
+    steps:[
+      'n8n SQL node watches Enquiry table for new inserts (webhook or polling every 60 s)',
+      'Pull full enquiry record: customer name, mobile, property interest, budget, source channel, location preference',
+      'Claude AI node scores the lead — Hot (ready to visit today), Warm (interested, needs 2–3 touchpoints), Cold (early-stage research)',
+      'Query Employee table: find available agent in the same branch with lowest active lead count and matching language preference (Telugu / Hindi / English)',
+      'INSERT assignment into TeleCallerMenu; UPDATE Enquiry with AssignedTo and LeadScore fields',
+      'Send personalised WhatsApp to customer: "Hi [Name], thank you for enquiring about [Property]. [Agent Name] will contact you within 2 hours."',
+      'Create TaskAssign record: call task due in 90 minutes, priority level derived from lead score',
+      'Wait 2 hours → check FollowUpEntry for contact made → if none, send SMS to BM: "[Agent] has not contacted [Customer] (Hot Lead) assigned 2h ago"'
+    ],
+    roles:'Tele Caller receives assignment · BM receives escalation · MD sees daily summary of Hot leads that went uncontacted',
+    pain:'Pain solved: Leads entered in Kakinada were waiting 4–6 hours for manual assignment, going cold before first contact.'
+  },
+  2:{
+    color:'#d69e2e', label:'02',
+    title:'Payment Due Date & Collection Orchestration',
+    trigger:'⏰ Trigger: Daily 7:00 AM cron — queries AdvanceReceipt table',
+    steps:[
+      'SQL query: SELECT all AdvanceReceipt records WHERE DueDate BETWEEN today AND today+7 AND Status = Pending',
+      'Group results by branch; calculate exact days remaining for each record',
+      'Day 7: Send email + SMS to customer — friendly reminder with amount, due date, and bank details',
+      'Day 3: WhatsApp message to customer + push notification to responsible agent with customer contact link',
+      'Day 1: Urgent SMS to agent AND branch manager — "Payment of ₹[X] from [Customer] is due tomorrow"',
+      'Day 0 (due date): Auto-generate receipt PDF template with all details pre-filled and ready for collection agent',
+      'Overdue Day 1+: Create ManagerMenu approval request; generate formal legal reminder notice PDF; email to GM',
+      'On payment received (webhook from receipt entry): SQL UPDATE status, generate official receipt PDF, email to customer, mark all pending reminders as resolved'
+    ],
+    roles:'Customer receives tiered reminders · Executive/Agent receives daily task · BM gets overdue alerts · GM handles persistent overdue',
+    pain:'Pain solved: Installment defaults were discovered only at month-end during manual ledger review — too late for recovery action.'
+  },
+  3:{
+    color:'#2f855a', label:'03',
+    title:'Multi-Branch Executive Performance Intelligence',
+    trigger:'⏰ Trigger: Every Monday 8:00 AM — weekly performance cycle',
+    steps:[
+      'SQL query: pull last 7 days from Enquiry, SiteVisits, SaleEntry, FollowUpEntry — grouped by EmployeeId and BranchId',
+      'Compute per agent: enquiries received, follow-ups completed on time, site visits conducted, sales closed, conversion ratio (visits → sales)',
+      'Compare with same period previous week (last Monday\'s stored snapshot) and monthly targets from Google Sheets config',
+      'Claude AI generates narrative paragraph: "Kakinada led this week with 3 closures. Hyderabad follow-up completion dropped 22% vs last week..."',
+      'Build individual agent scorecards: rank within branch, target vs actual, trend arrow (up/down/flat)',
+      'Generate role-filtered PDF report — MD version: all three branches; BM version: own branch + agent breakdown only',
+      'Email respective reports simultaneously: MD receives consolidated, each BM receives branch-specific, GM receives regional view',
+      'Append weekly row to Google Sheets dashboard: one row per branch with all KPIs — enables historical chart in Sheets'
+    ],
+    roles:'MD receives full cross-branch report · GM receives regional view · BM receives own branch + individual agent scorecards',
+    pain:'Pain solved: MD was waiting until monthly review meetings to spot underperformance — by then 3–4 weeks of productivity were already lost.'
+  },
+  4:{
+    color:'#2b6cb0', label:'04',
+    title:'Site Visit → Sale Conversion Pipeline',
+    trigger:'⚡ Trigger: SiteVisits record updated to Status = Completed',
+    steps:[
+      'DB trigger / polling detects SiteVisit completion; pull full record: customer, property viewed, agent notes, visit feedback',
+      'Claude AI generates personalised property summary based on stated preferences and visit notes',
+      'Wait 2 hours post-visit → send WhatsApp to customer with AI-generated summary and property brochure PDF',
+      'Day 1: Reminder notification to agent — "Follow up with [Customer] who visited [Property] yesterday — they showed strong interest in [Feature]"',
+      'Day 3 — check SaleEntry for conversion — if none: AI generates personalised offer letter PDF with current pricing and scheme; agent sends via WhatsApp',
+      'Day 7 — still no SaleEntry: escalate to Group Manager with full timeline: visit notes, communications sent, agent actions',
+      'Day 14 — deal marked lost or no activity: enter customer into win-back sequence — market update in 30 days, price drop alert, new project launch notification',
+      'At each step: log action timestamp back to CRM; update conversion funnel metrics for the branch report'
+    ],
+    roles:'Customer receives personalised follow-up communications · Executive gets daily action reminders · Group Manager intervenes at Day 7',
+    pain:'Pain solved: Site visits had a 12% conversion rate — analysis showed 70% of drop-offs had zero contact from the agent after Day 2.'
+  },
+  5:{
+    color:'#6b46c1', label:'05',
+    title:'Sale Confirmation → Legal & Registration Orchestrator',
+    trigger:'⚡ Trigger: ManagerMenu approval status updated to Approved for a SaleEntry',
+    steps:[
+      'DB change detected: SaleEntry is approved; pull full record — customer, plot, amount, agent, branch, loan requirement flag',
+      'Generate welcome letter PDF: customer name, plot details, total sale value, booking date, agent assigned, next steps',
+      'Send email + SMS to customer: "Your booking for Plot [X] is confirmed. Welcome to the SB Ventures family. Your agent [Name] will contact you within 24 hours."',
+      'Generate legal checklist PDF: documents required from customer, registration timeline, stamp duty estimate; email to legal team',
+      'Schedule registration reminder chain — 30, 15, 7, 1 days before registration due date: SMS to customer + legal team + agent simultaneously',
+      'If LoanRequired = Yes: trigger bank procedure sub-workflow — alert bank coordination team, schedule bank visit appointment, send loan checklist to customer',
+      'Create FollowUpEntry records automatically: Day 30 (possession update), Day 60 (document status), Day 90 (relationship check-in)',
+      'Log all automated actions in CRM audit trail with timestamps; notify accounts team for GST invoice generation'
+    ],
+    roles:'Customer receives welcome + reminders · Legal team receives checklist + alerts · Bank team receives loan trigger · Agent + BM receive task schedule',
+    pain:'Pain solved: Registration deadlines were missed in 3 out of 10 sales because there was no automated reminder system — each agent managed it manually.'
+  },
+  6:{
+    color:'#c05621', label:'06',
+    title:'Tele Caller Smart Lead Pool & Daily Brief',
+    trigger:'⏰ Trigger: Daily 8:45 AM — before tele callers start their shift',
+    steps:[
+      'Query TeleCallerPooling table: pull all uncontacted leads and leads with no follow-up in > 3 days, per branch',
+      'Score each lead: days since last contact, enquiry source quality (walk-in > referral > portal > cold call), stated budget, property type interest',
+      'Query each active tele caller: current pipeline size, yesterday\'s call completion rate, language skills (stored in Employee table), availability',
+      'AI assignment algorithm: match lead language to caller, cap at 15 leads per caller per day, prioritise Hot leads to callers with highest conversion history',
+      'INSERT new TeleCallerMenu records for each assignment; UPDATE TeleCallerPooling with AssignedTo and AssignedDate',
+      'Send WhatsApp to each caller: "Your calls for today: 1. [Name] [Mobile] — Interested in [Property] — Last contacted 4 days ago. 2. [Name]..."',
+      'At 5:30 PM: query today\'s FollowUpEntry completions per caller — compute: assigned vs completed, interested count, callback count, not-interested',
+      'Send BM WhatsApp summary: "Today: 45 calls assigned. 38 completed (84%). 6 interested, 4 callbacks scheduled, 3 pending. Top performer: [Name] — 12/12 completed."'
+    ],
+    roles:'Each Tele Caller receives personalised morning call list · BM receives morning assignment confirmation + evening productivity summary',
+    pain:'Pain solved: Tele callers were independently deciding who to call from a shared pool — duplicated calls, cherry-picking easy leads, and no accountability for daily output.'
+  },
+  7:{
+    color:'#2c7a7b', label:'07',
+    title:'Manager Approval Bottleneck & Escalation Engine',
+    trigger:'⏰ Trigger: Every 30 minutes — query ManagerMenu for pending approvals',
+    steps:[
+      'SQL query: SELECT all ManagerMenu records WHERE Status = Pending; calculate WaitingHours = NOW() - RequestedAt for each',
+      'For each pending item: pull context — agent name, customer, deal value, discount amount, discount %, branch',
+      '4–8 hours pending: send SMS to BM — "Approval needed: [Agent] has requested ₹[X] discount for [Customer] (Plot [Y]). 4 hours pending."',
+      '8–24 hours pending: Claude AI generates context summary — deal background, agent history, customer profile — escalate to GM via email + SMS',
+      'Over 24 hours pending: escalate to MD with full dossier — customer details, deal value, what\'s at risk if lost, agent performance record',
+      'Auto-approve rule engine: if discount ≤ 1% AND agent tenure > 24 months AND customer is repeat buyer → auto-approve and log with audit note',
+      'Every morning at 7 AM: email aging report to each BM — table of all pending items, hours waiting, deal values at risk, recommended action',
+      'On approval or rejection: instant SMS to agent; if customer was promised decision by a time, send update message automatically'
+    ],
+    roles:'Executive/Agent submits request · BM alerted at 4 h · GM escalated at 8 h · MD escalated at 24 h · All receive outcome confirmation',
+    pain:'Pain solved: Average approval wait was 18 hours — agents reported losing 2–3 deals per month to competitors while waiting for discount decisions.'
+  },
+  8:{
+    color:'#702459', label:'08',
+    title:'Monthly Commission Calculation & Payroll Engine',
+    trigger:'⏰ Trigger: Last working day of month at 6:00 PM',
+    steps:[
+      'SQL query: all SaleEntry records for the month WHERE Status = Confirmed, grouped by EmployeeId — sum SaleValue per agent',
+      'Apply commission slab rules (read from Google Sheets config): 0–2 sales = 0.5%, 3–5 sales = 0.75%, 6+ sales = 1.2% of total sale value',
+      'Add performance bonuses: target exceeded by > 20% → ₹5,000 bonus; highest sales value in branch → ₹10,000 bonus; 100% follow-up completion → ₹2,000',
+      'For each agent: build commission statement with deal-by-deal breakdown — plot, customer, sale value, commission rate, line total, bonus items, grand total',
+      'Generate individual commission statement PDF per employee using template; include comparison vs last month and year-to-date total',
+      'Email each BM their branch\'s commission summary with approve/reject link (n8n webhook URL) — BM clicks Approve or flags discrepancy',
+      'On BM approval: forward consolidated branch file to HR email; append one row per agent to Google Sheets payroll tracker with all figures',
+      'Send payslip PDF to each employee\'s email + SMS: "Your commission of ₹[X] for [Month] has been approved and submitted to HR for processing."'
+    ],
+    roles:'All sales Executives receive individual PDF statement + SMS · BM reviews and approves branch totals · HR receives approved consolidated file · MD sees discrepancy flag report',
+    pain:'Pain solved: HR was spending 2–3 days each month manually calculating commissions from Excel exports, with frequent disputes over which sales counted.'
+  }
+};
+
+function open_(id){
+  const d = data[id];
+  document.getElementById('m-num').textContent = d.label;
+  document.getElementById('m-num').style.background = d.color;
+  document.getElementById('m-title').textContent = d.title;
+  document.getElementById('m-trigger').textContent = d.trigger;
+  const ul = document.getElementById('m-steps');
+  ul.innerHTML = '';
+  d.steps.forEach((s,i)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div class="step-num" style="background:${d.color}">${i+1}</div><div class="step-desc">${s}</div>`;
+    ul.appendChild(li);
+  });
+  document.getElementById('m-roles').innerHTML = `<strong>Roles involved:</strong> ${d.roles}`;
+  document.getElementById('m-pain').textContent = d.pain;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e){ if(e.target===document.getElementById('modal')) closeModal_(); }
+function closeModal_(){ document.getElementById('modal').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal_(); });
+</script>
+</body>
+</html>
